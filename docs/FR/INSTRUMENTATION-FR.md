@@ -10,6 +10,25 @@ Ce guide couvre les parties du pipeline qui transforment l'activité runtime d'u
 - [Attributs de span requis](#attributs-de-span-requis) : les conventions sémantiques OTel legacy et stables que perf-sentinel lit.
 - [Dev/staging : instrumentation par langage](#devstaging--instrumentation-par-langage) : mise en place pas à pas pour Java, Quarkus, .NET, Rust.
 
+## Introduction à OpenTelemetry
+
+Si vous n'avez jamais utilisé OpenTelemetry, cette introduction courte est un préalable pour la suite du guide. Elle suppose que vous savez ce qu'est une requête HTTP et une requête en base de données. Elle ne suppose pas que vous avez déjà instrumenté une application ni déployé un backend de tracing. Les autres docs perf-sentinel renvoient ici pour les concepts OTel, voir [docs/FR/INTEGRATION-FR.md](INTEGRATION-FR.md) et [docs/FR/HELM-DEPLOYMENT-FR.md](HELM-DEPLOYMENT-FR.md#observabilité).
+
+**Qu'est-ce qu'OpenTelemetry.** OpenTelemetry (abrégé "OTel") est un projet de la Cloud Native Computing Foundation (CNCF) qui définit un standard ouvert pour collecter les données de télémétrie (traces, métriques, logs) depuis n'importe quel logiciel. C'est la fusion de deux projets antérieurs (OpenTracing et OpenCensus) consolidée en 2019, gouvernée sous la CNCF depuis. Les deux apports pratiques d'OTel :
+
+- **Un protocole** (OTLP, OpenTelemetry Protocol) qu'une application peut utiliser pour envoyer traces et métriques vers n'importe quel backend qui le parle. OTLP est stable en format wire, existe en variantes gRPC et HTTP+protobuf, et c'est ce que perf-sentinel ingère sur les ports 4317 (gRPC) et 4318 (HTTP).
+- **Des SDK** (Java, Python, Go, .NET, Rust, JavaScript, ...) qui gèrent les parties ennuyeuses : capturer chaque appel HTTP/SQL comme un *span*, propager le trace ID entre services, batcher, retry, envoyer en OTLP. La plupart des SDK incluent une auto-instrumentation pour les frameworks populaires (Spring, Quarkus, ASP.NET Core, Django, Express) donc le code applicatif change rarement.
+
+**Concepts clés.**
+
+- Un **span** est une unité de travail, typiquement une requête HTTP ou une requête SQL. Il porte une durée, un statut, un nom (`GET /api/orders`) et un sac d'attributs structurés.
+- Une **trace** est l'arbre de spans qui partagent un `trace_id`. Une requête utilisateur traverse typiquement plusieurs services, chacun produisant plusieurs spans, tous liés par le même `trace_id`.
+- Les **conventions sémantiques** sont les noms d'attributs définis par OTel pour que tous les SDK émettent le même champ pour le même concept. `http.request.method` est toujours le verbe HTTP, `db.system` est toujours le nom du moteur de base de données, et ainsi de suite. perf-sentinel lit un petit sous-ensemble de ces attributs pour détecter les anti-patterns. La liste fermée des attributs lus par perf-sentinel est dans [Attributs de span requis](#attributs-de-span-requis) ci-dessous.
+
+**Le Collector.** Un processus séparé, l'**OpenTelemetry Collector**, est la forme de déploiement recommandée entre les applications et les backends. Il reçoit l'OTLP venant d'une flotte d'applications, applique un sampling et un traitement d'attributs optionnels, et forwarde vers un ou plusieurs backends en parallèle (perf-sentinel, plus Tempo ou Jaeger pour le stockage, plus Prometheus pour les exemplars). Faire tourner un Collector central découple les applications des particularités de chaque backend et permet aux opérateurs de changer la politique de sampling sans toucher au code applicatif. Les formes de déploiement pertinentes sont couvertes dans [Production : via OpenTelemetry Collector](#production--via-opentelemetry-collector) ci-dessous.
+
+**Pour aller plus loin.** [opentelemetry.io](https://opentelemetry.io/), [spec OTLP](https://github.com/open-telemetry/opentelemetry-proto), [conventions sémantiques](https://opentelemetry.io/docs/specs/semconv/).
+
 ## Déploiement Kubernetes
 
 Un chart Helm packagé est disponible sous [`charts/perf-sentinel/`](../../charts/perf-sentinel/). Voir [HELM-DEPLOYMENT-FR.md](./HELM-DEPLOYMENT-FR.md) pour le guide d'installation complet et [`examples/helm/`](../../examples/helm/) pour un exemple complet qui compose le chart avec le chart upstream OpenTelemetry Collector. Les manifests bruts ci-dessous restent utiles aux utilisateurs qui préfèrent déployer sans Helm.

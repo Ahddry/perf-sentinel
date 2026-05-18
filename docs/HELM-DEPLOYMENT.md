@@ -457,6 +457,8 @@ endpoint reference and the `[daemon.ack]` field catalog.
 
 ## Observability
 
+> **See also.** The [Prometheus and OpenMetrics primer](METRICS.md#background-prometheus-and-openmetrics-primer) defines scraping, exemplars and the Counter/Gauge/Histogram types referenced below.
+
 ### Prometheus ServiceMonitor
 
 When the Prometheus Operator is installed, flip `serviceMonitor.enabled`

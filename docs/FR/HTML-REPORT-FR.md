@@ -26,7 +26,9 @@ open report.html
 
 C'est l'artefact que toute pipeline CI peut produire. Sans
 `--daemon-url`, le HTML généré est byte-équivalent à la sortie 0.5.22
-pour la même entrée. La CSP reste stricte (`default-src 'none'`),
+pour la même entrée. La CSP (Content-Security-Policy, l'en-tête
+navigateur qui déclare quels scripts et ressources la page a le
+droit de charger) reste stricte (`default-src 'none'`),
 aucun `fetch()` n'est émis vers un host quelconque.
 
 ## Mode live
@@ -51,8 +53,10 @@ Le daemon doit :
 
 La première fois que l'utilisateur clique sur `Ack` ou `Revoke` sur un
 daemon protégé par 401, le rapport ouvre une modale d'authentification
-et demande la `X-API-Key`. La clé est stockée en `sessionStorage`,
-scopée à l'onglet, et purgée à la fermeture de l'onglet.
+et demande la `X-API-Key`. La clé est stockée en `sessionStorage`
+(une API navigateur qui stocke des paires clé-valeur scopées à
+l'onglet courant et purgées à sa fermeture), donc elle ne persiste
+jamais sur disque et ne fuit jamais vers un autre onglet.
 
 ### CSP en mode live
 
