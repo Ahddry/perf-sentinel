@@ -21,6 +21,8 @@ The schema does not set `additionalProperties: false`; new fields can be added i
 
 ## Report metadata
 
+A disclosure document carries three orthogonal axes that consumers should read before parsing any data: `intent` says *who the report is for* (a private draft, an external publication, or a third-party-audited publication), `confidentiality_level` says *how much per-service detail is exposed* (full G1 anti-pattern breakdown vs aggregated G2 counts), and `integrity_level` says *which cryptographic primitives back the document* (none, content hash only, Sigstore-signed, signed with SLSA build attestation). Together they let an auditor or a journalist filter the corpus before trusting any number inside.
+
 `intent` is one of `internal | official | audited`. `audited` is reserved for a future release: the JSON schema accepts the value for forward compatibility, but the CLI refuses it today with exit code 2. `confidentiality_level` is one of `internal | public`. `integrity_level` is one of `none | hash-only | signed | audited`. The v1.0 schema produces `hash-only`. `generated_at` is an RFC 3339 UTC timestamp. `generated_by` is one of `daemon | cli-batch | ci`. `perf_sentinel_version` is the SemVer string of the binary that wrote the file. `report_uuid` is a v4 UUID stamped per run.
 
 ## Organisation
@@ -44,6 +46,8 @@ The publication domain (e.g. `transparency.example.fr`) is treated as an implici
 `calibration_applied` (0.7.0+) is `true` if any scoring window in the period had operator-supplied per-service calibration coefficients applied to the proxy energy. The flag is methodologically distinct from `scaphandre_used` and `energy_source_models`: those describe which energy source produced the numbers, this flag describes whether those numbers were further adjusted by operator coefficients.
 
 ## Aggregate
+
+> **See also.** The [Energy and SCI primer](METHODOLOGY.md#background-energy-and-sci-primer) in the methodology doc defines SCI v1.0 terms (E, I, M), `efficiency_score`, `io_waste_ratio`, Scaphandre, SPECpower and the related vocabulary used by every field below.
 
 Sums across the entire period and the entire `applications` array. `total_requests`, `total_energy_kwh`, `total_carbon_kgco2eq`, and `estimated_optimization_potential_kgco2eq` are non-negative finite numbers. `aggregate_waste_ratio` is in `[0, 1]`. `aggregate_efficiency_score` is in `[0, 100]` and equals `clamp(100 - 100 * io_waste_ratio, 0, 100)`. `anti_patterns_detected_count` is the sum of every per-service occurrences count, including non-avoidable patterns.
 

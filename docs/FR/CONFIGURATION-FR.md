@@ -98,6 +98,8 @@ omettent ce champ.
 
 ### `[green]`
 
+> **Voir aussi.** L'[introduction énergie et SCI](METHODOLOGY-FR.md#introduction-énergie-et-sci-v10) dans la doc méthodologie définit SCI v1.0 (termes E + I + M), RAPL, Scaphandre, SPECpower, Boavizta et l'API Electricity Maps utilisés par les sections de config ci-dessous. À lire une fois si l'un des termes ne vous est pas familier.
+
 Configuration du scoring GreenOps alignée sur [SCI v1.0](https://github.com/Green-Software-Foundation/sci) (termes opérationnel + embodié, intervalles de confiance, multi-région).
 
 | Champ                              | Type     | Défaut    | Description                                                                                                                                                                                                                                                                                                                                                                                                                                    |

@@ -21,6 +21,8 @@ Le schéma ne fixe pas `additionalProperties: false` ; de nouveaux champs peuven
 
 ## Métadonnées de rapport
 
+Un rapport de divulgation porte trois axes orthogonaux à lire avant tout parsing des données : `intent` indique *à qui le rapport est destiné* (brouillon privé, publication externe, ou publication auditée par un tiers), `confidentiality_level` indique *le niveau de détail par service exposé* (breakdown anti-patterns G1 complet vs comptages G2 agrégés), et `integrity_level` indique *quelles primitives cryptographiques garantissent le document* (rien, content hash seul, signé Sigstore, signé avec attestation de build SLSA). Ensemble, ils permettent à un auditeur ou un journaliste de filtrer le corpus avant de faire confiance à un chiffre à l'intérieur.
+
 `intent` vaut `internal | official | audited`. `audited` est réservé pour une release future : le schéma JSON accepte la valeur pour la compatibilité ascendante, mais la CLI le refuse aujourd'hui avec le code de sortie 2. `confidentiality_level` vaut `internal | public`. `integrity_level` vaut `none | hash-only | signed | audited`. Le schéma v1.0 produit `hash-only`. `generated_at` est un timestamp UTC RFC 3339. `generated_by` vaut `daemon | cli-batch | ci`. `perf_sentinel_version` est la chaîne SemVer du binaire qui a écrit le fichier. `report_uuid` est un UUID v4 estampillé par run.
 
 ## Organisation
@@ -44,6 +46,8 @@ Le domaine de publication (par exemple `transparency.example.fr`) est traité co
 `calibration_applied` (0.7.0+) vaut `true` si au moins une fenêtre de scoring de la période a appliqué des coefficients de calibration opérateur per-service à l'énergie proxy. Le flag est méthodologiquement distinct de `scaphandre_used` et `energy_source_models` : ceux-ci décrivent quelle source d'énergie a produit les chiffres, ce flag décrit si ces chiffres ont été ensuite ajustés par des coefficients opérateur.
 
 ## Agrégat
+
+> **Voir aussi.** L'[introduction énergie et SCI](METHODOLOGY-FR.md#introduction-énergie-et-sci-v10) dans la doc méthodologie définit les termes SCI v1.0 (E, I, M), `efficiency_score`, `io_waste_ratio`, Scaphandre, SPECpower et le vocabulaire associé utilisé par tous les champs ci-dessous.
 
 Sommes sur toute la période et tout le tableau `applications`. `total_requests`, `total_energy_kwh`, `total_carbon_kgco2eq` et `estimated_optimization_potential_kgco2eq` sont des nombres finis non négatifs. `aggregate_waste_ratio` est dans `[0, 1]`. `aggregate_efficiency_score` est dans `[0, 100]` et vaut `clamp(100 - 100 * io_waste_ratio, 0, 100)`. `anti_patterns_detected_count` est la somme de toutes les occurrences par service, y compris les patterns non évitables.
 
