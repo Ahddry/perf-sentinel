@@ -2,13 +2,7 @@
 
 Ce répertoire contient la documentation de conception approfondie de perf-sentinel. Ces documents expliquent **pourquoi** chaque décision a été prise, pas seulement ce que le code fait. Ils sont destinés aux contributeurs et mainteneurs qui ont besoin de comprendre les raisons derrière l'implémentation.
 
-Pour la documentation orientée utilisateur, voir le répertoire parent `docs/FR/` :
-- [ARCHITECTURE-FR.md](../ARCHITECTURE-FR.md) : vue d'ensemble du pipeline et responsabilités des modules
-- [CONFIGURATION-FR.md](../CONFIGURATION-FR.md) : référence complète `.perf-sentinel.toml`
-- [LIMITATIONS-FR.md](../LIMITATIONS-FR.md) : compromis connus
-- [INTEGRATION-FR.md](../INTEGRATION-FR.md) : vue d'ensemble des topologies et démarrages rapides
-- [INSTRUMENTATION-FR.md](../INSTRUMENTATION-FR.md) : guides de configuration OTLP (Java, Quarkus, .NET, Rust)
-- [CI-FR.md](../CI-FR.md) : mode CI, recettes GitHub Actions / GitLab CI / Jenkins
+Pour la documentation orientée utilisateur, voir le répertoire parent [`docs/FR/`](../00-INDEX-FR.md).
 
 ## Table des matières
 

@@ -2,13 +2,7 @@
 
 This directory contains deep design documentation for perf-sentinel. These documents explain **why** each decision was made, not just what the code does. They are intended for contributors and maintainers who need to understand the rationale behind the implementation.
 
-For user-facing documentation, see the parent `docs/` directory:
-- [ARCHITECTURE.md](../ARCHITECTURE.md): pipeline overview and module responsibilities
-- [CONFIGURATION.md](../CONFIGURATION.md): full `.perf-sentinel.toml` reference
-- [LIMITATIONS.md](../LIMITATIONS.md): known trade-offs
-- [INTEGRATION.md](../INTEGRATION.md): topology overview and quick starts
-- [INSTRUMENTATION.md](../INSTRUMENTATION.md): OTLP setup guides (Java, Quarkus, .NET, Rust)
-- [CI.md](../CI.md): CI mode, GitHub Actions / GitLab CI / Jenkins recipes
+For user-facing documentation, see the parent [`docs/`](../00-INDEX.md) directory.
 
 ## Table of contents
 
