@@ -53,18 +53,10 @@ est dépassé, le processus sort avec le code `1`. Les trois templates
 traduisent ensuite ce code de sortie en un résultat de build qui
 dépend du **déclencheur** du run :
 
-- **Sur une pull request** : le gate bloque. Un build rouge sur une PR
-  est le signal dont l'auteur a besoin pour corriger le finding avant
-  le merge. C'est le moment du workflow où le coût de correction est
-  le plus faible, l'auteur est encore dans le contexte et le code
-  n'est pas encore sur trunk.
-- **Sur un push vers trunk (branche par défaut)** : le gate est
-  informatif seulement. Le SARIF est toujours remonté vers Code
-  Scanning, le widget Code Quality ou Warnings NG, donc les dashboards
-  et l'analyse de tendance continuent de fonctionner, mais le build
-  reste vert. Une fois la PR acceptée et mergée, c'est le développeur
-  qui décide quand et quoi envoyer en production. perf-sentinel ne
-  doit pas se mettre entre un commit mergé et une release.
+| Déclencheur     | Comportement                                                        | Justification                                                                          |
+|-----------------|---------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| Pull request    | Le gate bloque (build rouge)                                        | L'auteur est encore dans le contexte, le coût de correction est le plus faible         |
+| Push vers trunk | Le gate est informatif seulement, le SARIF est tout de même remonté | Un commit mergé ne doit pas être retenu par perf-sentinel entre le merge et la release |
 
 Ce split évite le mode d'échec classique des gates PR qui enforcent
 aussi sur trunk : main reste rouge plus longtemps que prévu,
@@ -151,6 +143,13 @@ rester sur le mode SARIF + sticky comment markdown.
    d'en-tête dans
    [`docs/ci-templates/github-actions.yml`](../ci-templates/github-actions.yml)
    les localise).
+6. Dans ce même workflow principal, passer `contents: read` à
+   `contents: write` dans le bloc `permissions:`. Le step de
+   publication pousse le rapport HTML vers la branche `gh-pages`, ce
+   qu'un `GITHUB_TOKEN` read-only ne peut pas faire (le push échoue
+   avec un 403). Les workflows baseline et cleanup déclarent déjà
+   `contents: write`, donc seul le workflow principal nécessite ce
+   changement.
 
 Une fois les trois workflows en place, chaque PR obtient son propre
 rapport interactif à une URL stable :
@@ -185,7 +184,11 @@ upload des artefacts, et un workflow write-enabled déclenché par
 `workflow_run` qui download ces artefacts et poste le commentaire.
 Il n'est pas le défaut du template parce qu'il double la surface YAML
 et demande un passage d'artefacts soigné, pas proportionné pour un
-template starter.
+template starter. Le step `Publish report to gh-pages` est gardé de la
+même façon (il ne tourne que si
+`github.event.pull_request.head.repo.full_name == github.repository`),
+pour qu'une PR fork n'échoue jamais sur un push que le token read-only
+ne pourrait pas faire.
 
 **Trade-off de concurrency**. Le guard `concurrency.group:
 gh-pages-deploy` sérialise les runs de ce workflow avec les workflows
@@ -198,11 +201,14 @@ job dédié et restreindre la concurrency à ce job. Sauté ici pour
 garder le template compact.
 
 **Dépendances**. Le deploy utilise du `git` en clair contre la branche
-`gh-pages`, authentifié par le `GITHUB_TOKEN` intégré et la permission
-`contents: write` déclarée au niveau workflow. Aucune action tierce
-de deploy n'est requise, ce qui garde le template exempt de surface
-supply-chain pour le chemin d'upload. Seule `actions/checkout`
-(pinnée) est réutilisée dans les trois workflows.
+`gh-pages`, authentifié par le `GITHUB_TOKEN` intégré et une permission
+`contents: write`. Les workflows baseline et cleanup la déclarent par
+défaut ; le workflow principal est livré en `contents: read` et vous
+la passez à `write` en activant les blocs de publication (étape 6
+ci-dessus). Aucune action tierce de deploy n'est requise, ce qui garde
+le template exempt de surface supply-chain pour le chemin d'upload.
+Seule `actions/checkout` (pinnée) est réutilisée dans les trois
+workflows.
 
 **Empreinte de stockage**. Un rapport typique fait 80 à 150 Ko. Avec
 la rétention gérée par le workflow de cleanup, la branche gh-pages ne

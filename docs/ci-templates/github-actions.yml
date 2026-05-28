@@ -39,6 +39,11 @@ on:
   workflow_dispatch:
 
 permissions:
+  # Raise to `write` when you enable the GitHub Pages publish blocks
+  # below: pushing the HTML report to the gh-pages branch needs
+  # `contents: write`. Kept at `read` by default (least privilege)
+  # because the out-of-the-box template only uploads SARIF and
+  # comments on PRs, neither of which writes to the repo.
   contents: read
   security-events: write   # required for github/codeql-action/upload-sarif
   pull-requests: write     # required to comment on PRs
@@ -107,7 +112,10 @@ jobs:
       #      compare against,
       #   4. added `perf-sentinel-report-cleanup.yml` (see
       #      docs/ci-templates/github-actions-report-cleanup.yml) so
-      #      the gh-pages branch does not grow unbounded.
+      #      the gh-pages branch does not grow unbounded,
+      #   5. raised `contents: read` to `contents: write` in the
+      #      permissions block above, so the publish step can push to
+      #      the gh-pages branch (a read-only token gets a 403).
       # See docs/CI.md "Interactive report via GitHub Pages" for
       # the full recipe.
       #
@@ -167,8 +175,11 @@ jobs:
       # - name: Checkout gh-pages worktree
       #   # The report is pushed to gh-pages via plain git rather than
       #   # a third-party deploy action, keeping the template free of
-      #   # external dependencies beyond actions/checkout.
-      #   if: github.event_name == 'pull_request' && hashFiles('report.html') != ''
+      #   # external dependencies beyond actions/checkout. The same-repo
+      #   # guard mirrors the publish step below: a fork PR gets a
+      #   # read-only token and cannot push, so there is nothing to
+      #   # check out for.
+      #   if: github.event_name == 'pull_request' && hashFiles('report.html') != '' && github.event.pull_request.head.repo.full_name == github.repository
       #   uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
       #   with:
       #     ref: gh-pages
@@ -178,7 +189,11 @@ jobs:
       #   # A companion cleanup workflow removes the pr-N/ directory
       #   # when the PR closes (see
       #   # docs/ci-templates/github-actions-report-cleanup.yml).
-      #   if: github.event_name == 'pull_request' && hashFiles('report.html') != ''
+      #   # The same-repo guard skips this step on fork PRs: their
+      #   # GITHUB_TOKEN is read-only, so the push would 403 and turn
+      #   # the job red for the wrong reason (the cleanup workflow uses
+      #   # the same guard).
+      #   if: github.event_name == 'pull_request' && hashFiles('report.html') != '' && github.event.pull_request.head.repo.full_name == github.repository
       #   run: |
       #     set -euo pipefail
       #     DEST="gh-pages-worktree/perf-sentinel-reports/pr-${{ github.event.pull_request.number }}"

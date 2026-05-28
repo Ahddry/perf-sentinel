@@ -47,9 +47,9 @@ The "What it surfaces" column below references three CI-side formats: **SARIF** 
 
 All three templates run `perf-sentinel analyze --ci` as the gating step. The `--ci` flag exits with code `1` when any threshold in `[thresholds]` is breached. The templates translate that exit code differently based on the trigger:
 
-| Trigger | Behavior | Rationale |
-|---------|----------|-----------|
-| Pull request | Gate blocks (red build) | Author is still in context, cost of correction is lowest |
+| Trigger       | Behavior                                         | Rationale                                                                        |
+|---------------|--------------------------------------------------|----------------------------------------------------------------------------------|
+| Pull request  | Gate blocks (red build)                          | Author is still in context, cost of correction is lowest                         |
 | Push to trunk | Gate is informational only, SARIF still uploaded | A merged commit should not be held up by perf-sentinel between merge and release |
 
 This split avoids the common failure mode where PR-gates that also enforce on trunk leave main red, the team works around it, and the tool gets disabled.
@@ -60,7 +60,7 @@ Per-provider PR-vs-trunk wiring:
 
 - **GitHub Actions**: PR step runs when `github.event_name == 'pull_request'` and calls `exit 1` on breach, trunk step emits a `::warning::` annotation without failing.
 - **GitLab CI**: `allow_failure: true` on the `$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH` rule. The job still returns exit 1 on breach, the pipeline badge stays green, the job shows a yellow warning icon.
-- **Jenkins**: `when { expression { env.CHANGE_ID != null } }` on the `Quality gate (PR only)` stage. `CHANGE_ID` is populated by MultiBranch Pipeline only on PRs, so branch builds skip the stage. The Warnings NG `qualityGates` follows the same guard.
+- **Jenkins**: `when { expression { env.CHANGE_ID != null } }` on the `Quality gate (PR only)` stage. `CHANGE_ID` is populated by MultiBranch Pipeline only on PRs, so branch builds skip the stage. The Warnings NG `qualityGates` follows the same guard so the post block does not reintroduce blocking on trunk.
 
 ### Interactive report via GitHub Pages
 
@@ -114,6 +114,12 @@ on the SARIF + markdown sticky comment mode.
    header comment in
    [`docs/ci-templates/github-actions.yml`](./ci-templates/github-actions.yml)
    locates them).
+6. In that same main workflow, raise `contents: read` to
+   `contents: write` in the `permissions:` block. The publish step
+   pushes the HTML report to the `gh-pages` branch, which a read-only
+   `GITHUB_TOKEN` cannot do (the push fails with a 403). The baseline
+   and cleanup workflows already declare `contents: write`, so only
+   the main workflow needs the change.
 
 Once the three workflows are in place, every PR gets its own
 interactive report at a stable URL:
@@ -146,7 +152,10 @@ builds and uploads artifacts and a write-enabled workflow triggered
 by `workflow_run` that downloads those artifacts and posts the
 comment. It is not the default in this template because it doubles
 the YAML surface and needs careful artifact passing, not proportional
-for a getting-started template.
+for a getting-started template. The `Publish report to gh-pages` step
+is guarded the same way (it runs only when
+`github.event.pull_request.head.repo.full_name == github.repository`),
+so a fork PR never fails on a push the read-only token could not make.
 
 **Concurrency trade-off**. The `concurrency.group: gh-pages-deploy`
 guard serializes runs of this workflow against the baseline and
@@ -159,11 +168,13 @@ dedicated job and narrow the concurrency to that job only. Skipped
 here to keep the template compact.
 
 **Dependencies**. The deploy uses plain `git` against the `gh-pages`
-branch, authenticated with the built-in `GITHUB_TOKEN` and the
-`contents: write` permission declared at the workflow level. No
-third-party deploy action is required, which keeps the template free
-of supply-chain surface for the upload path. Only
-`actions/checkout` (pinned) is reused across all three workflows.
+branch, authenticated with the built-in `GITHUB_TOKEN` and a
+`contents: write` permission. The baseline and cleanup workflows
+declare it out of the box; the main workflow ships with
+`contents: read` and you raise it to `write` when enabling the publish
+blocks (step 6 above). No third-party deploy action is required, which
+keeps the template free of supply-chain surface for the upload path.
+Only `actions/checkout` (pinned) is reused across all three workflows.
 
 **Storage footprint**. A typical report is 80 to 150 KB. With retention
 handled by the cleanup workflow, the gh-pages branch only carries
