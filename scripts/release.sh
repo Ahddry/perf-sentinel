@@ -214,6 +214,6 @@ emit_notice ""
 emit_notice "Released ${VERSION} at ${SHORT_SHA}"
 emit_notice "  .github/workflows/release.yml is now running."
 emit_notice "  Next manual steps (RELEASE-PROCEDURE.md):"
-emit_notice "    7. Tag the Helm chart (chart-vA.B.C) once the GHCR image lands."
+emit_notice "    7. Release the Helm chart: scripts/release-chart.sh chart-vA.B.C (once the GHCR image lands)."
 emit_notice "    8. Public communication (LinkedIn, blog, etc.)."
 exit 0

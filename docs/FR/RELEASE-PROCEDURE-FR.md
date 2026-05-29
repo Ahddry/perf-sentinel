@@ -192,14 +192,22 @@ La provenance de chaque binaire de release est attestée par `actions/attest-bui
 
 ### 7. Release du chart Helm
 
-Attendre que l'image GHCR soit disponible (typiquement 5 à 10 minutes après le run du workflow), puis :
+Le tag du chart est enveloppé dans le même genre de commande qui échoue fermé que le tag du binaire :
 
 ```bash
-git tag chart-vA.B.C
+scripts/release-chart.sh chart-vA.B.C
+```
+
+Il lance tous les pre-checks (branche, arbre propre, identité de signature, sync remote, absence du tag), le gate de version (`scripts/check-helm-tag-version.sh`), et un gate image GHCR qui refuse de tagger tant que l'image du daemon pinnée par le chart (`ghcr.io/robintra/perf-sentinel:<appVersion>`) n'est pas publiée, pour qu'un `helm install` ne tire jamais une image manquante. Attendez que `release.yml` publie cette image (typiquement 5 à 10 minutes après l'étape 6), puis lancez le script. `--dry-run` vérifie les gates, `--yes` saute la confirmation, et `--skip-image-check` contourne le gate image. Le tag est toujours signé.
+
+Le fallback manuel, une fois l'image GHCR en ligne :
+
+```bash
+git tag -s chart-vA.B.C -m chart-vA.B.C
 git push origin chart-vA.B.C
 ```
 
-Ça déclenche `.github/workflows/helm-release.yml`, qui valide le tag du chart contre `Chart.yaml` via `scripts/check-helm-tag-version.sh`, package le chart, et le publie sur le chart repository GitHub Pages.
+L'un ou l'autre chemin déclenche `.github/workflows/helm-release.yml`, qui valide le tag du chart contre `Chart.yaml` via `scripts/check-helm-tag-version.sh`, package le chart et le pousse sur GHCR comme artefact OCI, le signe avec cosign en keyless, atteste la provenance de build SLSA et un SBOM SPDX (tous deux vérifiables via `gh attestation verify`), et crée la GitHub Release en brouillon. Publiez le brouillon une fois que vous l'avez relu.
 
 ### 8. Communication publique
 

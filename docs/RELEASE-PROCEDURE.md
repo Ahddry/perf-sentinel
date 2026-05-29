@@ -189,14 +189,22 @@ Provenance for every release binary is attested via `actions/attest-build-proven
 
 ### 7. Release the Helm chart
 
-Wait for the GHCR image to appear (typically 5-10 minutes after the workflow run), then:
+The chart tag is wrapped in the same kind of fail-closed command as the binary tag:
 
 ```bash
-git tag chart-vA.B.C
+scripts/release-chart.sh chart-vA.B.C
+```
+
+It runs every pre-check (branch, working tree, signing identity, remote sync, tag absence), the version gate (`scripts/check-helm-tag-version.sh`), and a GHCR image gate that refuses to tag until the daemon image the chart pins (`ghcr.io/robintra/perf-sentinel:<appVersion>`) is published, so a `helm install` never pulls a missing image. Wait for `release.yml` to publish that image (typically 5-10 minutes after step 6), then run the script. Use `--dry-run` to check the gates, `--yes` to skip the confirmation, and `--skip-image-check` to bypass the image gate. The tag is always signed.
+
+The manual fallback, once the GHCR image is live:
+
+```bash
+git tag -s chart-vA.B.C -m chart-vA.B.C
 git push origin chart-vA.B.C
 ```
 
-This triggers `.github/workflows/helm-release.yml`, which validates the chart tag against `Chart.yaml` via `scripts/check-helm-tag-version.sh`, packages the chart, and publishes it to the GitHub Pages chart repository.
+Either path triggers `.github/workflows/helm-release.yml`, which validates the chart tag against `Chart.yaml` via `scripts/check-helm-tag-version.sh`, packages the chart and pushes it to GHCR as an OCI artifact, cosign keyless signs it, attests SLSA build provenance and an SPDX SBOM (both queryable via `gh attestation verify`), and drafts the GitHub Release. Publish the drafted release once you have reviewed it.
 
 ### 8. Public communication
 
