@@ -101,6 +101,14 @@ Dix types de findings, plus la corrélation cross-trace en mode daemon :
 
 Chaque finding embarque : type, sévérité, template normalisé, occurrences, endpoint source, suggestion, localisation source (quand les spans OTel portent les attributs `code.*`) et impact GreenOps (voir plus bas). Pour les règles de sévérité et seuils ajustables, voir [docs/design/04-DETECTION.md](docs/design/04-DETECTION.md).
 
+## Formats d'entrée
+
+- **Fichiers de traces** (auto-détectés) : JSON natif perf-sentinel, export JSON Jaeger, Zipkin JSON v2. Pas de flag `--format` nécessaire, le format est détecté sur les premiers octets. Passés via `--input` sur `analyze`, `diff`, `explain`, `inspect`, `report`, `calibrate` (ou lus sur l'entrée standard pour `analyze`). Voir [docs/FR/INTEGRATION-FR.md#formats-dingestion](docs/FR/INTEGRATION-FR.md#formats-dingestion).
+- **OTLP live** : gRPC sur `:4317` et HTTP sur `:4318`, ingérés par le daemon `watch` depuis votre OTel Collector ou SDK. Voir [docs/FR/INTEGRATION-FR.md](docs/FR/INTEGRATION-FR.md).
+- **Grafana Tempo** : récupère les traces directement depuis un backend Tempo avec `perf-sentinel tempo`. Voir [docs/FR/INTEGRATION-FR.md#intégration-tempo](docs/FR/INTEGRATION-FR.md#intégration-tempo).
+- **API Jaeger query** : récupère depuis un backend Jaeger ou Victoria Traces avec `perf-sentinel jaeger-query`. Voir [docs/FR/INTEGRATION-FR.md#intégration-api-jaeger-query-jaeger-et-victoria-traces](docs/FR/INTEGRATION-FR.md#intégration-api-jaeger-query-jaeger-et-victoria-traces).
+- **`pg_stat_statements`** : classe les hotspots PostgreSQL depuis la vue catalogue avec `perf-sentinel pg-stat`. Voir [docs/FR/INTEGRATION-FR.md](docs/FR/INTEGRATION-FR.md).
+
 ## Formats de sortie
 
 - **`text`** (défaut) : sortie terminal colorée, regroupée par sévérité. Disponible sur `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`.
@@ -121,7 +129,7 @@ Les valeurs d'enum `io_intensity_band` / `io_waste_ratio_band` (`healthy` / `mod
 | Débit soutenu end-to-end                | **≈ 1,0 M évènements / sec**   |
 | Mémoire résidente sous charge soutenue  | **≈ 190 Mo**                   |
 
-Le chiffre `<20 Mo RSS` cité dans le TL;DR et le tableau comparatif correspond à l'**empreinte daemon stationnaire à faible trafic** (apples-to-apples avec les chiffres "agent idle" listés pour les autres outils) : le binaire release musl + mimalloc tourne à **~17 Mo** au repos (le build natif, ~10 Mo — mimalloc échange un peu de RSS contre de la vitesse d'allocation). Sous la charge soutenue de ~1,0 M évts/s ci-dessus, le même daemon culmine à **≈ 190 Mo** (contre 237 Mo mesuré sur 0.6.1, confortablement sous le plafond de 250 Mo).
+Le chiffre `<20 Mo RSS` cité dans le TL;DR et le tableau comparatif correspond à l'**empreinte daemon stationnaire à faible trafic** (apples-to-apples avec les chiffres "agent idle" listés pour les autres outils) : le binaire release musl + mimalloc tourne à **~17 Mo** au repos (le build natif, ~10 Mo, mimalloc échange un peu de RSS contre de la vitesse d'allocation). Sous la charge soutenue de ~1,0 M évts/s ci-dessus, le même daemon culmine à **≈ 190 Mo** (contre 237 Mo mesuré sur 0.6.1, confortablement sous le plafond de 250 Mo).
 
 Mesuré sur un Mac Mini M4 Pro (12 cœurs, 24 Go de mémoire unifiée, macOS 26.4.1), build release `aarch64-unknown-linux-musl` avec `mimalloc`, dans un conteneur Docker Desktop `linux/arm64` (VM 15,6 Go). Édition Rust 2024, rustc 1.96.0 stable. Reproduire avec `perf-sentinel bench --help`.
 

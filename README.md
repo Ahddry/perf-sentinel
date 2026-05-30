@@ -101,6 +101,14 @@ Ten finding types, plus cross-trace correlations in daemon mode:
 
 Each finding carries: type, severity, normalized template, occurrences, source endpoint, suggestion, source location (when OTel spans carry `code.*` attributes), and GreenOps impact (see below). For per-detector severity rules and tunable thresholds, see [docs/design/04-DETECTION.md](docs/design/04-DETECTION.md).
 
+## Input formats
+
+- **Trace files** (auto-detected): native perf-sentinel JSON, Jaeger JSON export, Zipkin JSON v2. No `--format` flag needed, the shape is sniffed from the first bytes. Passed via `--input` on `analyze`, `diff`, `explain`, `inspect`, `report`, `calibrate` (or read from stdin by `analyze`). See [docs/INTEGRATION.md#ingestion-formats](docs/INTEGRATION.md#ingestion-formats).
+- **OTLP live**: gRPC on `:4317` and HTTP on `:4318`, ingested by the `watch` daemon from your OTel Collector or SDK. See [docs/INTEGRATION.md](docs/INTEGRATION.md).
+- **Grafana Tempo**: pull traces straight from a Tempo backend with `perf-sentinel tempo`. See [docs/INTEGRATION.md#tempo-integration](docs/INTEGRATION.md#tempo-integration).
+- **Jaeger Query API**: pull from Jaeger upstream or Victoria Traces with `perf-sentinel jaeger-query`. See [docs/INTEGRATION.md#jaeger-query-api-integration-jaeger-and-victoria-traces](docs/INTEGRATION.md#jaeger-query-api-integration-jaeger-and-victoria-traces).
+- **`pg_stat_statements`**: rank PostgreSQL hotspots from the catalog view with `perf-sentinel pg-stat`. See [docs/INTEGRATION.md](docs/INTEGRATION.md).
+
 ## Output formats
 
 - **`text`** (default): severity-grouped colored terminal output. Available on `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`.
@@ -121,7 +129,7 @@ The JSON `io_intensity_band` / `io_waste_ratio_band` enum values (`healthy` / `m
 | Sustained end-to-end throughput        | **≈ 1.0 M events / sec**   |
 | Resident memory at sustained peak load | **≈ 190 MB**               |
 
-The `<20 MB RSS` figure quoted in the TL;DR and the comparison table is the **steady-state daemon footprint at low traffic** (apples-to-apples with the idle-agent figures listed for the other tools): the musl + mimalloc release binary idles at **~17 MB** (the native build idles at ~10 MB — mimalloc trades a little RSS for allocator speed). Under the sustained ~1.0 M events / sec load above, the same daemon peaks at **≈ 190 MB** (down from the 237 MB measured on 0.6.1, comfortably under the 250 MB ceiling).
+The `<20 MB RSS` figure quoted in the TL;DR and the comparison table is the **steady-state daemon footprint at low traffic** (apples-to-apples with the idle-agent figures listed for the other tools): the musl + mimalloc release binary idles at **~17 MB** (the native build idles at ~10 MB, mimalloc trades a little RSS for allocator speed). Under the sustained ~1.0 M events / sec load above, the same daemon peaks at **≈ 190 MB** (down from the 237 MB measured on 0.6.1, comfortably under the 250 MB ceiling).
 
 Measured on a Mac Mini M4 Pro (12 cores, 24 GB unified memory, macOS 26.4.1), release build `aarch64-unknown-linux-musl` with `mimalloc`, running inside a Docker Desktop `linux/arm64` VM provisioned with 15.6 GB. Rust 2024 edition, rustc 1.96.0 stable. Reproduce with `perf-sentinel bench --help`.
 
