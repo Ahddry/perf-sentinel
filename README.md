@@ -129,18 +129,6 @@ The JSON `io_intensity_band` / `io_waste_ratio_band` enum values (`healthy` / `m
 
 </details>
 
-## Performance
-
-| Metric                                 | Result (v0.8.0)            |
-|----------------------------------------|----------------------------|
-| Peak pipeline throughput               | **> 1.8 M events / sec**   |
-| Sustained end-to-end throughput        | **≈ 1.0 M events / sec**   |
-| Resident memory at sustained peak load | **≈ 190 MB**               |
-
-The `<20 MB RSS` figure quoted in the TL;DR and the comparison table is the **steady-state daemon footprint at low traffic** (apples-to-apples with the idle-agent figures listed for the other tools): the musl + mimalloc release binary idles at **~17 MB** (the native build idles at ~10 MB, mimalloc trades a little RSS for allocator speed). Under the sustained ~1.0 M events / sec load above, the same daemon peaks at **≈ 190 MB** (down from the 237 MB measured on 0.6.1, comfortably under the 250 MB ceiling).
-
-Measured on a Mac Mini M4 Pro (12 cores, 24 GB unified memory, macOS 26.4.1), release build `aarch64-unknown-linux-musl` with `mimalloc`, running inside a Docker Desktop `linux/arm64` VM provisioned with 15.6 GB. Rust 2024 edition, rustc 1.96.0 stable. Reproduce with `perf-sentinel bench --help`.
-
 ## Install
 
 ```bash
@@ -261,6 +249,18 @@ perf-sentinel query findings --service order-svc                   # talk to a r
 ```
 
 </details>
+
+## Performance
+
+| Metric                                 | Result (v0.8.0)            |
+|----------------------------------------|----------------------------|
+| Peak pipeline throughput               | **> 1.8 M events / sec**   |
+| Sustained end-to-end throughput        | **≈ 1.0 M events / sec**   |
+| Resident memory at sustained peak load | **≈ 190 MB**               |
+
+The `<20 MB RSS` figure quoted in the TL;DR and the comparison table is the **steady-state daemon footprint at low traffic** (apples-to-apples with the idle-agent figures listed for the other tools): the musl + mimalloc release binary idles at **~17 MB** (the native build idles at ~10 MB, mimalloc trades a little RSS for allocator speed). Under the sustained ~1.0 M events / sec load above, the same daemon peaks at **≈ 190 MB** (down from the 237 MB measured on 0.6.1, comfortably under the 250 MB ceiling).
+
+Measured on a Mac Mini M4 Pro (12 cores, 24 GB unified memory, macOS 26.4.1), release build `aarch64-unknown-linux-musl` with `mimalloc`, running inside a Docker Desktop `linux/arm64` VM provisioned with 15.6 GB. Rust 2024 edition, rustc 1.96.0 stable. Reproduce with `perf-sentinel bench --help`.
 
 ## GreenOps: I/O intensity score (directional)
 

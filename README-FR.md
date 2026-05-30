@@ -129,18 +129,6 @@ Les valeurs d'enum `io_intensity_band` / `io_waste_ratio_band` (`healthy` / `mod
 
 </details>
 
-## Performance
-
-| Métrique                                | Résultat (v0.8.0)              |
-|-----------------------------------------|--------------------------------|
-| Débit pic pipeline                      | **> 1,8 M évènements / sec**   |
-| Débit soutenu end-to-end                | **≈ 1,0 M évènements / sec**   |
-| Mémoire résidente sous charge soutenue  | **≈ 190 Mo**                   |
-
-Le chiffre `<20 Mo RSS` cité dans le TL;DR et le tableau comparatif correspond à l'**empreinte daemon stationnaire à faible trafic** (apples-to-apples avec les chiffres "agent idle" listés pour les autres outils) : le binaire release musl + mimalloc tourne à **~17 Mo** au repos (le build natif, ~10 Mo, mimalloc échange un peu de RSS contre de la vitesse d'allocation). Sous la charge soutenue de ~1,0 M évts/s ci-dessus, le même daemon culmine à **≈ 190 Mo** (contre 237 Mo mesuré sur 0.6.1, confortablement sous le plafond de 250 Mo).
-
-Mesuré sur un Mac Mini M4 Pro (12 cœurs, 24 Go de mémoire unifiée, macOS 26.4.1), build release `aarch64-unknown-linux-musl` avec `mimalloc`, dans un conteneur Docker Desktop `linux/arm64` (VM 15,6 Go). Édition Rust 2024, rustc 1.96.0 stable. Reproduire avec `perf-sentinel bench --help`.
-
 ## Installation
 
 ```bash
@@ -261,6 +249,18 @@ perf-sentinel query findings --service order-svc                   # dialoguer a
 ```
 
 </details>
+
+## Performance
+
+| Métrique                                | Résultat (v0.8.0)              |
+|-----------------------------------------|--------------------------------|
+| Débit pic pipeline                      | **> 1,8 M évènements / sec**   |
+| Débit soutenu end-to-end                | **≈ 1,0 M évènements / sec**   |
+| Mémoire résidente sous charge soutenue  | **≈ 190 Mo**                   |
+
+Le chiffre `<20 Mo RSS` cité dans le TL;DR et le tableau comparatif correspond à l'**empreinte daemon stationnaire à faible trafic** (apples-to-apples avec les chiffres "agent idle" listés pour les autres outils) : le binaire release musl + mimalloc tourne à **~17 Mo** au repos (le build natif, ~10 Mo, mimalloc échange un peu de RSS contre de la vitesse d'allocation). Sous la charge soutenue de ~1,0 M évts/s ci-dessus, le même daemon culmine à **≈ 190 Mo** (contre 237 Mo mesuré sur 0.6.1, confortablement sous le plafond de 250 Mo).
+
+Mesuré sur un Mac Mini M4 Pro (12 cœurs, 24 Go de mémoire unifiée, macOS 26.4.1), build release `aarch64-unknown-linux-musl` avec `mimalloc`, dans un conteneur Docker Desktop `linux/arm64` (VM 15,6 Go). Édition Rust 2024, rustc 1.96.0 stable. Reproduire avec `perf-sentinel bench --help`.
 
 ## GreenOps : score d'intensité I/O (directionnel)
 
