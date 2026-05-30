@@ -6,6 +6,13 @@ Chart versions are independent from the perf-sentinel application
 versions, the chart's `appVersion` field tracks which daemon version is
 the default target.
 
+## [0.2.46]
+
+### Changed
+
+- `appVersion` bumped to `0.8.1` to track a patch release with no daemon-facing change. The SQL tokenizer slice path gains a debug-only char-boundary assertion (compiled out in release) as a refactor guard, disclose state initialization is simplified, and the release tooling and docs are extended (Helm chart release automation script, a design note on why the release profile omits `overflow-checks`). Template surface is unchanged, no migration needed beyond the chart bump. All changes are additive, no config, default CLI output, daemon wire, or report JSON change.
+- `artifacthub.io/images` annotation bumped to `ghcr.io/robintra/perf-sentinel:0.8.1` to keep the Artifact Hub display metadata in lockstep with `appVersion`. Runtime image selection is unaffected (templates already resolve to `.Chart.AppVersion` when `values.yaml` `image.tag` is empty).
+
 ## [0.2.45]
 
 ### Changed
