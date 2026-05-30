@@ -101,7 +101,10 @@ Dix types de findings, plus la corrélation cross-trace en mode daemon :
 
 Chaque finding embarque : type, sévérité, template normalisé, occurrences, endpoint source, suggestion, localisation source (quand les spans OTel portent les attributs `code.*`) et impact GreenOps (voir plus bas). Pour les règles de sévérité et seuils ajustables, voir [docs/design/04-DETECTION.md](docs/design/04-DETECTION.md).
 
-## Formats d'entrée
+## Formats d'entrée et de sortie
+
+<details>
+<summary><b>Formats d'entrée</b></summary>
 
 - **Fichiers de traces** (auto-détectés) : JSON natif perf-sentinel, export JSON Jaeger, Zipkin JSON v2. Pas de flag `--format` nécessaire, le format est détecté sur les premiers octets. Passés via `--input` sur `analyze`, `diff`, `explain`, `inspect`, `report`, `calibrate` (ou lus sur l'entrée standard pour `analyze`). Voir [docs/FR/INTEGRATION-FR.md#formats-dingestion](docs/FR/INTEGRATION-FR.md#formats-dingestion).
 - **OTLP live** : gRPC sur `:4317` et HTTP sur `:4318`, ingérés par le daemon `watch` depuis votre OTel Collector ou SDK. Voir [docs/FR/INTEGRATION-FR.md](docs/FR/INTEGRATION-FR.md).
@@ -109,7 +112,10 @@ Chaque finding embarque : type, sévérité, template normalisé, occurrences, e
 - **API Jaeger query** : récupère depuis un backend Jaeger ou Victoria Traces avec `perf-sentinel jaeger-query`. Voir [docs/FR/INTEGRATION-FR.md#intégration-api-jaeger-query-jaeger-et-victoria-traces](docs/FR/INTEGRATION-FR.md#intégration-api-jaeger-query-jaeger-et-victoria-traces).
 - **`pg_stat_statements`** : classe les hotspots PostgreSQL depuis la vue catalogue avec `perf-sentinel pg-stat`. Voir [docs/FR/INTEGRATION-FR.md](docs/FR/INTEGRATION-FR.md).
 
-## Formats de sortie
+</details>
+
+<details>
+<summary><b>Formats de sortie</b></summary>
 
 - **`text`** (défaut) : sortie terminal colorée, regroupée par sévérité. Disponible sur `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`.
 - **`json`** : rapport structuré. Disponible sur `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`. Schéma complet dans [docs/FR/SCHEMA-FR.md](docs/FR/SCHEMA-FR.md), exemples dans [docs/schemas/examples/](docs/schemas/examples/).
@@ -120,6 +126,8 @@ Chaque finding embarque : type, sévérité, template normalisé, occurrences, e
 - **Disclosure périodique (optionnel)** : JSON `perf-sentinel-report/v1.0` vérifiable par hash depuis `perf-sentinel disclose`, signable via Sigstore. Voir [docs/FR/REPORTING-FR.md](docs/FR/REPORTING-FR.md).
 
 Les valeurs d'enum `io_intensity_band` / `io_waste_ratio_band` (`healthy` / `moderate` / `high` / `critical`) sont stables entre versions, les seuils numériques sous-jacents peuvent évoluer. Tableau de référence et explication dans [docs/FR/LIMITATIONS-FR.md#interprétation-des-scores](docs/FR/LIMITATIONS-FR.md#interprétation-des-scores).
+
+</details>
 
 ## Performance
 

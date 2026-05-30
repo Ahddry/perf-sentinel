@@ -101,7 +101,10 @@ Ten finding types, plus cross-trace correlations in daemon mode:
 
 Each finding carries: type, severity, normalized template, occurrences, source endpoint, suggestion, source location (when OTel spans carry `code.*` attributes), and GreenOps impact (see below). For per-detector severity rules and tunable thresholds, see [docs/design/04-DETECTION.md](docs/design/04-DETECTION.md).
 
-## Input formats
+## Input and output formats
+
+<details>
+<summary><b>Input formats</b></summary>
 
 - **Trace files** (auto-detected): native perf-sentinel JSON, Jaeger JSON export, Zipkin JSON v2. No `--format` flag needed, the shape is sniffed from the first bytes. Passed via `--input` on `analyze`, `diff`, `explain`, `inspect`, `report`, `calibrate` (or read from stdin by `analyze`). See [docs/INTEGRATION.md#ingestion-formats](docs/INTEGRATION.md#ingestion-formats).
 - **OTLP live**: gRPC on `:4317` and HTTP on `:4318`, ingested by the `watch` daemon from your OTel Collector or SDK. See [docs/INTEGRATION.md](docs/INTEGRATION.md).
@@ -109,7 +112,10 @@ Each finding carries: type, severity, normalized template, occurrences, source e
 - **Jaeger Query API**: pull from Jaeger upstream or Victoria Traces with `perf-sentinel jaeger-query`. See [docs/INTEGRATION.md#jaeger-query-api-integration-jaeger-and-victoria-traces](docs/INTEGRATION.md#jaeger-query-api-integration-jaeger-and-victoria-traces).
 - **`pg_stat_statements`**: rank PostgreSQL hotspots from the catalog view with `perf-sentinel pg-stat`. See [docs/INTEGRATION.md](docs/INTEGRATION.md).
 
-## Output formats
+</details>
+
+<details>
+<summary><b>Output formats</b></summary>
 
 - **`text`** (default): severity-grouped colored terminal output. Available on `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`.
 - **`json`**: structured report. Available on `analyze`, `diff`, `pg-stat`, `query`, `explain`, `ack`. Full schema in [docs/SCHEMA.md](docs/SCHEMA.md), example fixtures in [docs/schemas/examples/](docs/schemas/examples/).
@@ -120,6 +126,8 @@ Each finding carries: type, severity, normalized template, occurrences, source e
 - **Periodic disclosure (optional)**: hash-verifiable `perf-sentinel-report/v1.0` JSON from `perf-sentinel disclose`, signable via Sigstore. See [docs/REPORTING.md](docs/REPORTING.md).
 
 The JSON `io_intensity_band` / `io_waste_ratio_band` enum values (`healthy` / `moderate` / `high` / `critical`) are stable across versions, numeric thresholds behind them may evolve. Reference table and rationale in [docs/LIMITATIONS.md#score-interpretation](docs/LIMITATIONS.md#score-interpretation).
+
+</details>
 
 ## Performance
 
