@@ -13,7 +13,7 @@
   <img alt="perf-sentinel" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/logo/logo-horizontal.svg">
 </picture>
 
-**Détecte les anti-patterns d'I/O (N+1, appels redondants, SQL/HTTP lents, fanout) dans les traces OpenTelemetry de vos services et estime l'empreinte énergétique et carbone de ces I/O. S'utilise soit comme quality gate CI sur traces capturées, soit comme daemon OTLP long-running (métriques Prometheus, API de query).**
+**Détecte les anti-patterns d'I/O (N+1, appels redondants, SQL/HTTP lents, fanout) dans les traces OpenTelemetry de vos services et chiffre ces mêmes I/O en énergie et en carbone. S'utilise soit comme quality gate CI sur traces capturées, soit comme daemon OTLP long-running (métriques Prometheus, API de query).**
 
 > **À lire en premier**
 > - **Prérequis :** vos services doivent émettre des **traces OpenTelemetry** (spans SQL + HTTP). Sinon, perf-sentinel n'a rien à analyser. Voir [docs/FR/INSTRUMENTATION-FR.md](docs/FR/INSTRUMENTATION-FR.md) pour la mise en place (Java / C# / Rust / Go / Node.js / Python).
@@ -184,7 +184,7 @@ Modèles : **batch CI** (`analyze --ci` sur traces capturées, exit 1 sur dépas
 <details>
 <summary><b>GreenOps (transversal)</b></summary>
 
-![Intégration GreenOps : sources externes temps réel (Scaphandre RAPL en kWh sur x86, Kepler eBPF en kWh sur ARM et x86, Redfish BMC en watts pour bare-metal, Electricity Maps en gCO2/kWh) plus sources internes froides (Cloud SPECpower en kWh, carbone embarqué en gCO2e/req via Boavizta + HotCarbon 2024, transport réseau en kWh/GB via Mytton 2024) alimentant perf-sentinel en mode batch ou daemon, émettant énergie et carbone en parallèle des traces](https://raw.githubusercontent.com/robintra/perf-sentinel-simulation-lab/main/docs/diagrams/svg/perf-sentinel-GreenOps.svg)
+![Intégration GreenOps : sources externes temps réel (Scaphandre RAPL en kWh sur x86, Kepler eBPF en kWh sur ARM et x86, Redfish BMC en watts pour bare-metal, Electricity Maps en gCO₂/kWh) plus sources internes froides (Cloud SPECpower en kWh, carbone embarqué en gCO₂e/req via Boavizta + HotCarbon 2024, transport réseau en kWh/GB via Mytton 2024) alimentant perf-sentinel en mode batch ou daemon, émettant énergie et carbone en parallèle des traces](https://raw.githubusercontent.com/robintra/perf-sentinel-simulation-lab/main/docs/diagrams/svg/perf-sentinel-GreenOps.svg)
 
 </details>
 
@@ -420,7 +420,7 @@ La section [Aperçu rapide](#aperçu-rapide) en haut de page affiche les GIFs an
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops-dark.png">
-  <img alt="dashboard report : onglet GreenOps avec breakdown CO2 multi-région sur eu-west-3, us-east-1 et eu-central-1" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops.png">
+  <img alt="dashboard report : onglet GreenOps avec breakdown CO₂ multi-région sur eu-west-3, us-east-1 et eu-central-1" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops.png">
 </picture>
 
 <picture>

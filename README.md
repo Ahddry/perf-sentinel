@@ -13,7 +13,7 @@
   <img alt="perf-sentinel" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/logo/logo-horizontal.svg">
 </picture>
 
-**Detect I/O anti-patterns (N+1, redundant calls, slow SQL/HTTP, fanout) in your services' OpenTelemetry traces, and estimate the energy and carbon footprint of that I/O. Run it either as a CI quality gate on captured traces, or as a long-running OTLP daemon (Prometheus metrics, query API).**
+**Detect I/O anti-patterns (N+1, redundant calls, slow SQL/HTTP, fanout) in your services' OpenTelemetry traces, and turn that exact I/O into an energy and carbon estimate. Run it either as a CI quality gate on captured traces, or as a long-running OTLP daemon (Prometheus metrics, query API).**
 
 > **Read this first**
 > - **Prerequisite:** your services must emit **OpenTelemetry traces** (SQL + HTTP spans). If they don't, perf-sentinel has nothing to analyze. See [docs/INSTRUMENTATION.md](docs/INSTRUMENTATION.md) for language-specific setup (Java / C# / Rust / Go / Node.js / Python).
@@ -184,7 +184,7 @@ Models: **CI batch** (`analyze --ci` on captured traces, exits 1 on threshold br
 <details>
 <summary><b>GreenOps (cross-cutting)</b></summary>
 
-![GreenOps integration: external real-time sources (Scaphandre RAPL kWh on x86, Kepler eBPF kWh on ARM and x86, Redfish BMC watts for bare-metal, Electricity Maps gCO2/kWh) plus internal cold sources (Cloud SPECpower kWh, embodied carbon gCO2e/req via Boavizta + HotCarbon 2024, network transport kWh/GB via Mytton 2024) feeding perf-sentinel in batch or daemon mode, emitting energy and carbon alongside traces](https://raw.githubusercontent.com/robintra/perf-sentinel-simulation-lab/main/docs/diagrams/svg/perf-sentinel-GreenOps.svg)
+![GreenOps integration: external real-time sources (Scaphandre RAPL kWh on x86, Kepler eBPF kWh on ARM and x86, Redfish BMC watts for bare-metal, Electricity Maps gCO₂/kWh) plus internal cold sources (Cloud SPECpower kWh, embodied carbon gCO₂e/req via Boavizta + HotCarbon 2024, network transport kWh/GB via Mytton 2024) feeding perf-sentinel in batch or daemon mode, emitting energy and carbon alongside traces](https://raw.githubusercontent.com/robintra/perf-sentinel-simulation-lab/main/docs/diagrams/svg/perf-sentinel-GreenOps.svg)
 
 </details>
 
@@ -420,7 +420,7 @@ The [Quick look](#quick-look) section at the top shows live GIFs. The frozen fra
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops-dark.png">
-  <img alt="report dashboard: GreenOps tab with multi-region CO2 breakdown across eu-west-3, us-east-1 and eu-central-1" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops.png">
+  <img alt="report dashboard: GreenOps tab with multi-region CO₂ breakdown across eu-west-3, us-east-1 and eu-central-1" src="https://raw.githubusercontent.com/robintra/perf-sentinel/main/docs/img/report/greenops.png">
 </picture>
 
 <picture>
