@@ -164,3 +164,38 @@ jobs:
 
       - name: Run self-test harness
         run: scripts/test/check-chart-version-bumped-test.sh
+
+  # Misconfiguration scan of the rendered manifests. helm lint and kubeconform
+  # above cover style and schema, this covers Kubernetes security posture
+  # (privilege, capabilities, securityContext, resources). Soft-fail for now so
+  # it reports without blocking: the chart has only low, by-design findings today
+  # (tag-pinned image, the ephemeral helm-test hook). Drop --soft-fail once those
+  # are addressed or skip-listed to turn this into a hard gate.
+  checkov:
+    name: Checkov (rendered manifests)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5.0.0
+
+      # Render with the optional security-relevant resources on (NetworkPolicy,
+      # ServiceMonitor) so they are scanned too. Workload-kind variants
+      # (DaemonSet, StatefulSet) share the same pod spec, so the default
+      # Deployment render already covers their security context. checkov is
+      # pinned for reproducibility and run via `pipx run` so it does not depend
+      # on ~/.local/bin being on PATH. Bump the pin periodically for new policies.
+      - name: helm template | checkov
+        run: |
+          helm template perf-sentinel charts/perf-sentinel/ \
+            --namespace perf-sentinel \
+            --set networkPolicy.enabled=true \
+            --set serviceMonitor.enabled=true > rendered-manifests.yaml
+          pipx run --spec checkov==3.2.530 checkov -f rendered-manifests.yaml \
+            --framework kubernetes \
+            --compact \
+            --soft-fail

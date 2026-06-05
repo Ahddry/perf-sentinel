@@ -5,6 +5,9 @@
     <a href="https://sonarcloud.io/summary/overall?id=robintrassard_perf-sentinel"><img src="https://sonarcloud.io/api/project_badges/measure?project=robintrassard_perf-sentinel&metric=coverage" alt="Coverage" /></a>
     <a href="https://sonarcloud.io/summary/overall?id=robintrassard_perf-sentinel"><img src="https://sonarcloud.io/api/project_badges/measure?project=robintrassard_perf-sentinel&metric=alert_status" alt="Quality Gate" /></a>
     <a href="https://github.com/robintra/perf-sentinel/actions/workflows/release.yml"><img src="https://github.com/robintra/perf-sentinel/actions/workflows/release.yml/badge.svg" alt="Release" /></a>
+    <a href="https://crates.io/crates/perf-sentinel"><img src="https://img.shields.io/crates/v/perf-sentinel?logo=rust&label=crates.io&color=D34516" alt="crates.io" /></a>
+    <a href="https://docs.rs/perf-sentinel-core"><img src="https://img.shields.io/badge/docs.rs-perf--sentinel--core-66c2a5?logo=docsdotrs&logoColor=white" alt="docs.rs" /></a>
+    <a href="https://github.com/robintra/perf-sentinel/pkgs/container/perf-sentinel"><img src="https://img.shields.io/badge/ghcr.io-perf--sentinel-2496ED?logo=docker&logoColor=white" alt="Container image" /></a>
     <a href="https://artifacthub.io/packages/helm/perf-sentinel/perf-sentinel"><img src="https://img.shields.io/endpoint?url=https://artifacthub.io/badge/repository/perf-sentinel" alt="Artifact Hub" /></a>
 </p>
 
