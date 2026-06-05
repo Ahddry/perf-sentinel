@@ -32,6 +32,11 @@ on:
         required: false
         type: string
 
+# Default-deny the GITHUB_TOKEN at the top level. Each job re-grants the
+# narrower scope it needs (the check job adds security-events: write).
+permissions:
+  contents: read
+
 env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"

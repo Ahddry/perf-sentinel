@@ -17,6 +17,11 @@ on:
   schedule:
     - cron: '17 6 * * *'
 
+# Default-deny the GITHUB_TOKEN. The audit job re-grants issues: write to
+# file advisories as GitHub issues.
+permissions:
+  contents: read
+
 jobs:
   audit:
     name: Cargo Audit
