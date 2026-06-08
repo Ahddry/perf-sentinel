@@ -887,6 +887,24 @@ async fn main() {
     dispatch_command(Cli::parse().command).await;
 }
 
+/// Render the root man page plus one page per subcommand to `out`, so
+/// tuning documented only in a subcommand's long help (e.g. the `[daemon]`
+/// queue knobs on `watch`) is discoverable from `man`, not just `--help`.
+/// The root page alone lists subcommands by short description only.
+fn render_man(out: &mut impl std::io::Write) -> std::io::Result<()> {
+    let cmd = Cli::command();
+    let mut pages = vec![cmd.clone()];
+    for sub in cmd.get_subcommands() {
+        if sub.get_name() != "help" {
+            pages.push(sub.clone());
+        }
+    }
+    for page in pages {
+        clap_mangen::Man::new(page).render(out)?;
+    }
+    Ok(())
+}
+
 /// Dispatch a parsed CLI command to its handler. Lifted out of
 /// `main()` so the binary entry point stays focused on tracing init
 /// and parsing while the per-subcommand wiring lives here.
@@ -1141,24 +1159,9 @@ async fn dispatch_command(command: Commands) {
             clap_complete::generate(shell, &mut cmd, "perf-sentinel", &mut std::io::stdout());
         }
         Commands::Man => {
-            // Render the root page, then one page per subcommand, so tuning
-            // documented only in a subcommand's long help (e.g. the `[daemon]`
-            // queue knobs on `watch`) is discoverable from `man`, not just
-            // `--help`. The root page alone lists subcommands by their short
-            // description only.
-            let cmd = Cli::command();
-            let mut pages = vec![cmd.clone()];
-            for sub in cmd.get_subcommands() {
-                if sub.get_name() != "help" {
-                    pages.push(sub.clone());
-                }
-            }
-            let mut out = std::io::stdout();
-            for page in pages {
-                if let Err(err) = clap_mangen::Man::new(page).render(&mut out) {
-                    eprintln!("Error: failed to render man page: {err}");
-                    std::process::exit(1);
-                }
+            if let Err(err) = render_man(&mut std::io::stdout()) {
+                eprintln!("Error: failed to render man page: {err}");
+                std::process::exit(1);
             }
         }
         Commands::Disclose {
@@ -3085,11 +3088,8 @@ mod tests {
 
     #[test]
     fn man_subcommand_renders_roff() {
-        use clap::CommandFactory;
         let mut buf: Vec<u8> = Vec::new();
-        clap_mangen::Man::new(Cli::command())
-            .render(&mut buf)
-            .expect("man render should succeed");
+        render_man(&mut buf).expect("man render should succeed");
         let out = String::from_utf8(buf).expect("man output is utf-8");
         assert!(
             out.contains(".TH"),
@@ -3098,6 +3098,19 @@ mod tests {
         assert!(
             out.to_uppercase().contains("PERF-SENTINEL"),
             "man page should name the binary"
+        );
+        // Root page plus one page per subcommand: several .TH headers, and
+        // tunables documented only in a subcommand long_about must surface.
+        assert!(
+            out.matches(".TH").count() > 1,
+            "expected a man page per subcommand, not just the root"
+        );
+        // `analysis_queue_capacity` lives in the `watch` long_about, which
+        // only exists with the daemon feature.
+        #[cfg(feature = "daemon")]
+        assert!(
+            out.contains("analysis_queue_capacity"),
+            "watch tunables should appear in the man output"
         );
     }
 }
