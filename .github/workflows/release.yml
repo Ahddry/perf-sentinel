@@ -45,16 +45,17 @@ jobs:
         include:
           # Linux binaries target musl, not glibc, so they are statically linked
           # and run on any distro (including `FROM scratch` images) regardless
-          # of the host glibc version. The ubuntu-latest runner's glibc version
-          # is not baked into the artifact.
+          # of the runner's glibc version. Both build natively on a matching-arch
+          # runner (amd64 on ubuntu-latest, arm64 on ubuntu-24.04-arm), which is
+          # what lets cargo-auditable embed audit data into each, arm64 included.
           - target: x86_64-unknown-linux-musl
             os: ubuntu-latest
             artifact: perf-sentinel-linux-amd64
             musl: true
           - target: aarch64-unknown-linux-musl
-            os: ubuntu-latest
+            os: ubuntu-24.04-arm
             artifact: perf-sentinel-linux-arm64
-            cross: true
+            musl: true
           - target: aarch64-apple-darwin
             os: macos-latest
             artifact: perf-sentinel-macos-arm64
@@ -73,9 +74,9 @@ jobs:
         with:
           key: ${{ matrix.target }}
 
-      # musl-tools provides musl-gcc, needed by ring's build.rs when compiling
-      # for the native x86_64 musl target. Not needed for cross-compilation via
-      # `cross` (the cross Docker image already ships a musl toolchain).
+      # musl-tools provides musl-gcc, needed by ring's build.rs to produce the
+      # statically linked musl binaries. Both Linux targets build natively on a
+      # matching-arch runner, so each gets its own host-arch musl-gcc from apt.
       - name: Install musl-tools
         if: matrix.musl
         run: sudo apt-get update && sudo apt-get install -y musl-tools
@@ -83,43 +84,27 @@ jobs:
       # `rust-toolchain.toml` pins 1.96.0 and rustup auto-installs it on the
       # first cargo call. The target must be added to THAT toolchain, not to
       # the `stable` channel the action sets up (they are different versions).
-      # The cross path builds inside a Docker image that ships its own Rust
-      # toolchain, so this step only applies to the native (non-cross) matrix
-      # entries. Host targets (aarch64-apple-darwin, x86_64-pc-windows-msvc)
-      # are a no-op install and harmless.
+      # The two musl targets add a cross-libc target onto their host toolchain;
+      # the macOS and Windows entries add their own host triple, a harmless
+      # no-op.
       - name: Add build target to the pinned toolchain
-        if: ${{ !matrix.cross }}
         run: |
           cargo --version
           rustup target add ${{ matrix.target }}
 
-      - name: Install cross
-        if: matrix.cross
-        run: cargo install cross --locked --version 0.2.5
-
-      - name: Build (cross)
-        if: matrix.cross
-        run: cross build --release --target ${{ matrix.target }} -p perf-sentinel
-
-      # cargo-auditable embeds the resolved dependency list into the binary so
+      # cargo-auditable embeds the resolved dependency list into each binary so
       # `cargo audit bin <file>` works on the shipped artifact, not just on the
       # repo's Cargo.lock. Installed from prebuilt releases by
       # taiki-e/install-action (the same action ci.yml uses), version-pinned to
-      # match the repo's pinning discipline.
-      #
-      # The cross (aarch64-musl) target is deliberately NOT covered: embedding
-      # would require running cargo-auditable inside the `cross` Docker image,
-      # which is fragile to wire and cannot be validated outside a real release.
-      # The CycloneDX SBOM attached to every release (see the `sbom` job below)
-      # is arch-independent and documents the same dependency set for aarch64.
+      # match the repo's pinning discipline. All four targets build natively
+      # (the aarch64-musl build moved off the `cross` Docker tool onto an arm64
+      # runner), so every released binary carries the embedded data.
       - name: Install cargo-auditable
-        if: ${{ !matrix.cross }}
         uses: taiki-e/install-action@e49978b799e49ff429d162b7a30601a569ab6538 # v2.81.1
         with:
           tool: cargo-auditable@0.7.5
 
-      - name: Build (native, with embedded audit data)
-        if: ${{ !matrix.cross }}
+      - name: Build (with embedded audit data)
         run: cargo auditable build --release --target ${{ matrix.target }} -p perf-sentinel
 
       - name: Rename binary (Unix)
@@ -138,10 +123,9 @@ jobs:
 
   # CycloneDX SBOM for the shipped CLI binary: its full transitive dependency
   # tree, emitted as JSON. Arch-independent, so one SBOM documents every target
-  # binary (including the cross-built aarch64 one that lacks embedded audit
-  # data). Runs in parallel with `build`; the `release` job waits on both, picks
-  # the file up via the merged artifact download, and ships it as a release
-  # asset alongside the checksums and provenance attestation.
+  # binary in a single file. Runs in parallel with `build`; the `release` job
+  # waits on both, picks the file up via the merged artifact download, and ships
+  # it as a release asset alongside the checksums and provenance attestation.
   sbom:
     name: Generate SBOM (CycloneDX)
     needs: check-versions
