@@ -104,7 +104,15 @@ jobs:
         with:
           tool: cargo-auditable@0.7.5
 
+      # Belt-and-suspenders for the native arm64 musl build: point ring's
+      # build.rs (via the cc crate) at the musl wrapper rather than letting it
+      # fall back to the glibc gcc the runner ships by default. `musl-gcc` comes
+      # from the musl-tools package installed above. The cc crate only reads
+      # CC_<target> when building for that target, so this is an inert no-op for
+      # the x86_64, macOS and Windows entries (where musl-gcc may not even exist).
       - name: Build (with embedded audit data)
+        env:
+          CC_aarch64_unknown_linux_musl: musl-gcc
         run: cargo auditable build --release --target ${{ matrix.target }} -p perf-sentinel
 
       - name: Rename binary (Unix)
