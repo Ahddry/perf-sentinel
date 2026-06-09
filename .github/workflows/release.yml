@@ -129,46 +129,45 @@ jobs:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
-  # CycloneDX SBOM for the shipped CLI binary: its full transitive dependency
-  # tree, emitted as JSON. Arch-independent, so one SBOM documents every target
-  # binary in a single file. Runs in parallel with `build`; the `release` job
-  # waits on both, picks the file up via the merged artifact download, and ships
-  # it as a release asset alongside the checksums and provenance attestation.
+  # SPDX SBOM for the release binary, attested under the SPDX predicate, in the
+  # same shape as the chart's SBOM job in helm-release.yml so the whole project
+  # tells one SBOM story. Syft reads the dependency list straight from the
+  # cargo-auditable data embedded in the Linux amd64 binary (the most-downloaded
+  # artifact and the base of the amd64 container image). The four binaries share
+  # their Rust dependency closure bar a few platform-shim crates, so this one
+  # SBOM documents the release. The `release` job (needs: [build, sbom]) picks
+  # the file up via the merged artifact download and ships it as a release asset.
   sbom:
-    name: Generate SBOM (CycloneDX)
-    needs: check-versions
+    name: Generate SBOM and attest
+    needs: build
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      id-token: write     # OIDC token for the SBOM attestation signing
+      attestations: write # store the SBOM attestation on the repo
     steps:
-      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-
-      - uses: dtolnay/rust-toolchain@29eef336d9b2848a0b548edc03f92a220660cdb8 # stable
+      - name: Download the Linux amd64 binary
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          toolchain: stable
+          name: perf-sentinel-linux-amd64
+          path: out
 
-      - uses: taiki-e/install-action@e49978b799e49ff429d162b7a30601a569ab6538 # v2.81.1
+      - name: Generate SBOM
+        uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
         with:
-          tool: cargo-cyclonedx@0.5.9
+          file: out/perf-sentinel-linux-amd64
+          format: spdx-json
+          artifact-name: perf-sentinel-sbom.spdx.json
+          output-file: out/perf-sentinel-sbom.spdx.json
+          upload-artifact: true
+          upload-release-assets: false
 
-      # `--target all` unions the dependency set across every platform, so the
-      # single SBOM covers all four release binaries (libc on unix, winapi on
-      # windows, etc.), not just the host. Default features, matching the
-      # release build of perf-sentinel. cargo-cyclonedx emits one SBOM per
-      # workspace member next to each manifest; we ship the CLI crate's,
-      # `crates/sentinel-cli/perf-sentinel.cdx.json` (the core crate's is an
-      # ignored byproduct).
-      - name: Generate CycloneDX SBOM
-        run: cargo cyclonedx --format json --target all --spec-version 1.5
-
-      - name: Stage SBOM under the release-asset name
-        run: cp crates/sentinel-cli/perf-sentinel.cdx.json perf-sentinel-sbom.cdx.json
-
-      - name: Upload SBOM artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - name: Attest SBOM
+        uses: actions/attest@59d89421af93a897026c735860bf21b6eb4f7b26 # v4.1.0
         with:
-          name: perf-sentinel-sbom.cdx.json
-          path: perf-sentinel-sbom.cdx.json
+          subject-path: out/perf-sentinel-linux-amd64
+          predicate-type: https://spdx.dev/Document/v2.3
+          predicate-path: out/perf-sentinel-sbom.spdx.json
 
   # SLSA Build L3 provenance attestation for every release binary.
   # Stored in the GitHub attestations API (no release asset), queryable
